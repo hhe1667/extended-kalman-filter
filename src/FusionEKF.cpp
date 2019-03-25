@@ -36,7 +36,7 @@ FusionEKF::FusionEKF() {
    * TODO: Finish initializing the FusionEKF.
    * TODO: Set the process and measurement noises
    */
-
+  ekf_.Init(,)
 
 }
 
@@ -51,8 +51,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    */
   if (!is_initialized_) {
     /**
-     * TODO: Initialize the state ekf_.x_ with the first measurement.
-     * TODO: Create the covariance matrix.
+     * Done: Initialize the state ekf_.x_ with the first measurement.
+     * Done: Create the covariance matrix.
      * You'll need to convert radar from polar to cartesian coordinates.
      */
 
@@ -62,14 +62,32 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     ekf_.x_ << 1, 1, 1, 1;
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
-      // TODO: Convert radar from polar to cartesian coordinates 
+      // Done: Convert radar from polar to cartesian coordinates
       //         and initialize state.
-
+      float rho = measurement_pack.raw_measurements_(1);
+      float phi = measurement_pack.raw_measurements_(2);
+      float c1 = tan(phi);
+      float c2 = sqrt(1+c1*c1);
+      if(fabs(c2) < 0.0001) {
+        Print("Divided by zero.");
+        return;
+      }
+      float px = rho/c2;
+      float py = sqrt(rho*rho - px*px);
+      ekf_.x_ << px, py, 0, 0;
+    } else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
+      // Done: Initialize state.
+      ekf_.x_ << measurement_pack.raw_measurements_(1),
+                 measurement_pack.raw_measurements_(2),
+                 0, 0;
     }
-    else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
-      // TODO: Initialize state.
 
-    }
+    MatrixXd P(4,4);
+    P << 1000.0, 0, 0, 0,
+         0, 1000.0, 0, 0,
+         0, 0, 1000.0, 0,
+         0,0,0, 1000.0;
+
 
     // done initializing, no need to predict or update
     is_initialized_ = true;
@@ -86,6 +104,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
    * TODO: Update the process noise covariance matrix.
    * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
+
 
   ekf_.Predict();
 
