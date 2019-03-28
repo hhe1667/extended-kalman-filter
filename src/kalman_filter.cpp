@@ -53,15 +53,15 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   float py = x_(1);
   float vx = x_(2);
   float vy = x_(3);
-  VectorXd hx(x_.size());
   float c1 = sqrt(px*px + py*py);
   if (fabs(c1) < 0.0001 || fabs(px) < 0.0001) {
     printf("Divided by zero.");
     return;
   }
+  VectorXd hx(3);
   hx << c1,
         atan2(py, px),  // should be -pi~pi
-        (px*vx+py*vy)/c1;
+        (px*vx + py*vy)/c1;
    VectorXd y = z - hx;
 
    // H_ here is Hj

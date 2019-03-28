@@ -39,7 +39,10 @@ FusionEKF::FusionEKF() {
    * TODO: Finish initializing the FusionEKF.
    * TODO: Set the process and measurement noises
    */
-
+  ekf_.x_ = VectorXd(4);
+  ekf_.P_ = MatrixXd(4, 4);
+  ekf_.F_ = MatrixXd(4, 4);
+  ekf_.Q_ = MatrixXd(4, 4);
 
 }
 
@@ -49,6 +52,7 @@ FusionEKF::FusionEKF() {
 FusionEKF::~FusionEKF() {}
 
 void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
+  cout << "Input: " << measurement_pack.to_string() << endl;
   /**
    * Initialization
    */
@@ -67,25 +71,24 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       // Done: Convert radar from polar to cartesian coordinates
       //         and initialize state.
-      float rho = measurement_pack.raw_measurements_(1);
-      float phi = measurement_pack.raw_measurements_(2);
+      float rho = measurement_pack.raw_measurements_[0];
+      float phi = measurement_pack.raw_measurements_[1];
       float c1 = tan(phi);
-      float c2 = sqrt(1+c1*c1);
-      if(fabs(c2) < 0.0001) {
+      float c2 = sqrt(1 + c1*c1);
+      if (fabs(c2) < 0.0001) {
         printf("Divided by zero.");
         return;
       }
-      float px = rho/c2;
+      float px = rho / c2;
       float py = sqrt(rho*rho - px*px);
       ekf_.x_ << px, py, 0, 0;
     } else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       // Done: Initialize state.
-      ekf_.x_ << measurement_pack.raw_measurements_(1),
-                 measurement_pack.raw_measurements_(2),
+      ekf_.x_ << measurement_pack.raw_measurements_[0],
+                 measurement_pack.raw_measurements_[1],
                  0, 0;
     }
 
-    ekf_.P_ = MatrixXd(4,4);
     ekf_.P_ << 1, 0, 0, 0,
                0, 1, 0, 0,
                0, 0, 1000, 0,
@@ -103,7 +106,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
    // Done: Update the state transition matrix F according to the new elapsed time.
    // Time is measured in seconds.
-   float dt = measurement_pack.timestamp_ - previous_timestamp_;
+   float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0;
    previous_timestamp_ = measurement_pack.timestamp_;
    ekf_.F_ << 1, 0, dt, 0,
               0, 1, 0, dt,
@@ -117,7 +120,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   float dt2 = dt * dt;
   float dt3 = dt2 * dt;
   float dt4 = dt2 * dt2;
-  ekf_.Q_ = MatrixXd(4, 4);
   ekf_.Q_ << dt4*noise_ax/4, 0, dt3*noise_ax/2, 0,
             0, dt4*noise_ay/4, 0, dt3*noise_ay/2,
             dt3*noise_ax/2, 0, dt2*noise_ax, 0,
@@ -137,9 +139,9 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // Done: Radar updates
-    float rho = measurement_pack.raw_measurements_(1);
-    float phi = measurement_pack.raw_measurements_(2);
-    float rho_dot = measurement_pack.raw_measurements_(3);
+    float rho = measurement_pack.raw_measurements_[0];
+    float phi = measurement_pack.raw_measurements_[1];
+    float rho_dot = measurement_pack.raw_measurements_[2];
     VectorXd z(3);
     z << rho, phi, rho_dot;
     // TODO: use ekf_.Init() instead of direct access.
@@ -149,10 +151,10 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     ekf_.UpdateEKF(z);
   } else {
     // Done: Laser updates
-    float px = measurement_pack.raw_measurements_(1);
-    float py = measurement_pack.raw_measurements_(2);
-    VectorXd z(4);
-    z << px, py, 0, 0;
+    float px = measurement_pack.raw_measurements_[0];
+    float py = measurement_pack.raw_measurements_[1];
+    VectorXd z(2);
+    z << px, py;
     ekf_.H_ = H_laser_;
     ekf_.R_ = R_laser_;
 
