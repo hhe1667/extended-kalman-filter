@@ -44,6 +44,7 @@ class FusionEKF {
   Eigen::MatrixXd R_radar_;
   Eigen::MatrixXd H_laser_;
   Eigen::MatrixXd Hj_;
+  int num_inputs_ = 0;
 };
 
 #endif // FusionEKF_H_

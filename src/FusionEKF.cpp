@@ -52,7 +52,7 @@ FusionEKF::FusionEKF() {
 FusionEKF::~FusionEKF() {}
 
 void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
-  cout << "Input: " << measurement_pack.to_string() << endl;
+  cout << "Input " << num_inputs_++ << ": " << measurement_pack.to_string() << endl;
   /**
    * Initialization
    */
@@ -115,8 +115,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
   // Done: Update the process noise covariance matrix.
   // Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
-  float noise_ax = 9;
-  float noise_ay = 9;
+  float noise_ax = 5;
+  float noise_ay = 5;
   float dt2 = dt * dt;
   float dt3 = dt2 * dt;
   float dt4 = dt2 * dt2;
