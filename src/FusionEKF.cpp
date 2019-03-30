@@ -144,7 +144,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     float rho_dot = measurement_pack.raw_measurements_[2];
     VectorXd z(3);
     z << rho, phi, rho_dot;
-    // TODO: use ekf_.Init() instead of direct access.
+    // use ekf_.Init() instead of direct access?
 
     ekf_.H_ = tools.CalculateJacobian(ekf_.x_);
     ekf_.R_ = R_radar_;
