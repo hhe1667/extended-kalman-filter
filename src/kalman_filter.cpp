@@ -48,6 +48,12 @@ void KalmanFilter::Update(const VectorXd &z) {
    P_ = (I - K*H_) * P_;
 }
 
+namespace {
+double NormalizeAngle(double phi) {
+  return atna2(sin(phi), cos(phi));
+}
+}  // namespace
+
 void KalmanFilter::UpdateEKF(const VectorXd &z) {
   // Done: update the state by using Extended Kalman Filter equations
   float px = x_(0);
@@ -65,12 +71,7 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
         (px*vx + py*vy)/c1;
    std::cout << hx[0] << ", " << hx[1] << ", " << hx[2] << std::endl;
    VectorXd y = z - hx;
-   while (y[1] > M_PI) {
-     y[1] -= M_PI*2;
-   }
-   while (y[1] < -M_PI) {
-     y[1] += M_PI*2;
-   }
+   y[1] = NormalizeAngle(y[1]);
 
    // H_ here is Hj
    MatrixXd Hj = H_;
@@ -82,6 +83,7 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
    // New estimate
    x_ = x_ + K*y;
    int x_size = x_.size();
-   MatrixXd I = MatrixXd::Identity(x_size, x_size);
-   P_ = (I-K*Hj)*P_;
+   // MatrixXd I = MatrixXd::Identity(x_size, x_size);
+   // P_ = (I - K*Hj)*P_;
+   P_ -= K*Hj*P_;
 }
